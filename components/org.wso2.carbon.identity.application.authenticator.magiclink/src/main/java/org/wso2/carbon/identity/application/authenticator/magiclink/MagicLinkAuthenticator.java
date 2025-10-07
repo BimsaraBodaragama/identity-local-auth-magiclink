@@ -558,6 +558,17 @@ public class MagicLinkAuthenticator extends AbstractApplicationAuthenticator imp
         User user = new User();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String contextTenantDomain = context.getTenantDomain();
+
+        if (StringUtils.isNotBlank(contextTenantDomain)) {
+            if (StringUtils.isNotBlank(tenantDomain) &&
+                    !StringUtils.equalsIgnoreCase(contextTenantDomain, tenantDomain) && log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "User tenant domain: %s does not match context tenant domain: %s. Proceeding with the " +
+                                "context tenant domain.", tenantDomain, contextTenantDomain));
+            }
+            tenantDomain = contextTenantDomain;
+        }
 
         user.setUsername(tenantAwareUsername);
         user.setUserStoreDomain(UserCoreUtil.extractDomainFromName(username));

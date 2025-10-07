@@ -554,6 +554,22 @@ public class MagicLinkAuthenticatorTest {
         Assert.assertEquals(status, AuthenticatorFlowStatus.INCOMPLETE);
     }
 
+    @Test(description = "Test case for resolveUser() when tenant domains mismatch")
+    public void testResolveUserDefaultsToContextTenantDomain() throws Exception {
+
+        when(httpServletRequest.getParameter(MagicLinkAuthenticatorConstants.USER_NAME)).thenReturn(USERNAME);
+        when(FrameworkUtils.preprocessUsername(USERNAME, context)).thenReturn(USERNAME_WITH_TENANT_DOMAIN);
+        when(MultitenantUtils.getTenantAwareUsername(USERNAME_WITH_TENANT_DOMAIN)).thenReturn(USERNAME);
+        when(MultitenantUtils.getTenantDomain(USERNAME_WITH_TENANT_DOMAIN)).thenReturn("wso2.com");
+        when(IdentityUtil.isEmailUsernameValidationDisabled()).thenReturn(true);
+        mockStatic(UserCoreUtil.class);
+        when(UserCoreUtil.extractDomainFromName(USERNAME_WITH_TENANT_DOMAIN)).thenReturn(USER_STORE_DOMAIN);
+        context.setTenantDomain(SUPER_TENANT_DOMAIN);
+
+        User resolvedUser = Whitebox.invokeMethod(magicLinkAuthenticator, "resolveUser", httpServletRequest, context);
+        Assert.assertEquals(resolvedUser.getTenantDomain(), SUPER_TENANT_DOMAIN);
+    }
+
     @ObjectFactory
     public IObjectFactory getObjectFactory() {
 
